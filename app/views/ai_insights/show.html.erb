@@ -106,7 +106,7 @@
   <!-- Live Predict Form -->
   <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
     <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary);">Yeni Sorgu Tahmin Et</div>
-    <%= form_with url: predict_warehouse_ai_insights_path(@warehouse), method: :get, local: true do |f| %>
+    <%= form_with url: warehouse_ai_insights_path(@warehouse), method: :get, local: true do |f| %>
       <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
         <div style="flex: 2; min-width: 200px;">
           <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Sorgu İmzası</label>

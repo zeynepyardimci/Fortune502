@@ -28,7 +28,10 @@ class AiInsightsController < ApplicationController
       query_signature:   params[:query_signature].to_s,
       credits_requested: params[:credits_requested].to_f
     )
-    render json: result
+    respond_to do |format|
+      format.json { render json: result }
+      format.html { redirect_to warehouse_ai_insights_path(@warehouse, query_signature: params[:query_signature], credits_requested: params[:credits_requested]) }
+    end
   end
 
   private

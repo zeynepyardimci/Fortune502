@@ -11,7 +11,7 @@ Rails.application.routes.draw do
     end
     resources :credit_usage_logs, only: [:create]
     resource :ai_insights, only: [:show] do
-      post :predict, on: :collection
+      match :predict, via: [:get, :post], on: :collection
     end
   end
 
