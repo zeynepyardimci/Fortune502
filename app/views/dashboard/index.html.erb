@@ -1,0 +1,134 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700;">Bulut Maliyet & Kota Gösterge Paneli</h1>
+    <p style="color: var(--text-secondary); font-size: 0.9rem;">Sanal ambar kredi tüketimi, 15 dakikalık SLA onay pencereleri ve FinOps koruma metrikleri.</p>
+  </div>
+  <div>
+    <%= link_to "+ Yeni Ambar Tanımla", new_warehouse_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<!-- Metrik Kartları -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Toplam Kredi Kotası</div>
+    <div class="mono" style="font-size: 1.8rem; font-weight: 700; margin-top: 8px;"><%= number_with_delimiter(@total_quota) %> <span style="font-size: 0.9rem; color: var(--text-secondary);">kredi</span></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Harcanan Kredi</div>
+    <div class="mono" style="font-size: 1.8rem; font-weight: 700; margin-top: 8px; color: <%= @total_used > @total_quota ? 'var(--status-throttled)' : 'var(--text-primary)' %>;"><%= number_with_delimiter(@total_used) %> <span style="font-size: 0.9rem; color: var(--text-secondary);">kredi</span></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">SLA Onayı Bekleyen (Throttled)</div>
+    <div class="mono" style="font-size: 1.8rem; font-weight: 700; margin-top: 8px; color: var(--status-throttled);"><%= @throttled_count %></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Askıya Alınan (Suspended)</div>
+    <div class="mono" style="font-size: 1.8rem; font-weight: 700; margin-top: 8px; color: var(--status-suspended);"><%= @suspended_count %></div>
+  </div>
+</div>
+
+<!-- Sanal Ambarlar Tablosu -->
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h2 style="font-size: 1.2rem; font-weight: 600;">Sanal Ambarlar ve Canlı SLA Durumu</h2>
+    <%= link_to "Tümünü Gör →", warehouses_path, style: "color: var(--accent-cyan); text-decoration: none; font-size: 0.85rem;" %>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Ambar Adı</th>
+        <th>Departman</th>
+        <th>Boyut</th>
+        <th>Durum</th>
+        <th>Tüketim / Kota</th>
+        <th>Kullanım %</th>
+        <th>15 dk SLA Durumu</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @warehouses.each do |wh| %>
+        <tr>
+          <td style="font-weight: 600;">
+            <%= link_to wh.name, warehouse_path(wh), style: "color: var(--text-primary); text-decoration: none;" %>
+          </td>
+          <td><span class="mono" style="color: var(--text-secondary);"><%= wh.department&.cost_center_code %></span> <%= wh.department&.name %></td>
+          <td><span class="badge" style="background: rgba(255,255,255,0.05);"><%= wh.size.upcase %></span></td>
+          <td>
+            <span class="badge badge-<%= wh.status %>"><%= wh.status %></span>
+          </td>
+          <td class="mono"><%= wh.credits_used %> / <%= wh.credit_quota %></td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex: 1; background: var(--bg-hover); height: 6px; border-radius: 3px; overflow: hidden; width: 80px;">
+                <div style="width: <%= [wh.usage_pct, 100].min %>%; height: 100%; background: <%= wh.usage_pct >= 100 ? 'var(--status-throttled)' : (wh.usage_pct >= 80 ? 'var(--status-warning)' : 'var(--status-active)') %>;"></div>
+              </div>
+              <span class="mono" style="font-size: 0.75rem;"><%= wh.usage_pct %>%</span>
+            </div>
+          </td>
+          <td>
+            <% if wh.throttled? %>
+              <% rem = wh.sla_seconds_remaining %>
+              <% if rem && rem > 0 %>
+                <span class="mono" style="color: var(--status-throttled); font-weight: 600;">⏱️ <%= rem / 60 %>dk <%= rem % 60 %>sn kaldı</span>
+              <% else %>
+                <span style="color: var(--status-throttled); font-weight: 600;">⚠️ SLA Aşıldı (Süresi Doldu)</span>
+              <% end %>
+            <% elsif wh.suspended? %>
+              <span style="color: var(--text-secondary);">Otomatik Askıda</span>
+            <% else %>
+              <span style="color: var(--status-active);">Normal</span>
+            <% end %>
+          </td>
+          <td>
+            <% if wh.throttled? %>
+              <%= button_to "Ek Bütçe Onayla", approve_sla_warehouse_path(wh), method: :post, class: "btn btn-success", style: "padding: 4px 10px; font-size: 0.75rem;" %>
+            <% else %>
+              <%= link_to "Detay", warehouse_path(wh), class: "btn btn-outline", style: "padding: 4px 10px; font-size: 0.75rem;" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Denetim İzi (Audit Log) & Son Olaylar -->
+<div class="card">
+  <h2 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 16px;">FinOps Denetim İzi (Son Durum Olayları)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Zaman</th>
+        <th>Ambar</th>
+        <th>Önceki Durum</th>
+        <th>Yeni Durum</th>
+        <th>Tetikleyen Neden</th>
+        <th>İşlemi Yapan</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @recent_events.any? %>
+        <% @recent_events.each do |event| %>
+          <tr>
+            <td class="mono" style="color: var(--text-secondary);"><%= event.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+            <td style="font-weight: 500;"><%= event.warehouse.name %></td>
+            <td><span class="badge badge-<%= event.from_status %>"><%= event.from_status %></span></td>
+            <td><span class="badge badge-<%= event.to_status %>"><%= event.to_status %></span></td>
+            <td><%= event.reason %></td>
+            <td><%= event.triggered_by&.full_name || "Sistem (FinOps Auto-Governor)" %></td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 24px;">Henüz kaydedilmiş bir durum geçiş olayı bulunmuyor.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

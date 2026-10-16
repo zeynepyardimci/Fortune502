@@ -1,0 +1,51 @@
+<div style="margin-bottom: 24px;">
+  <%= link_to "← Ambar Listesine Dön", warehouses_path, style: "color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem;" %>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 20px;">Yeni Sanal Ambar Tanımla</h1>
+
+  <%= form_with model: @warehouse, local: true do |f| %>
+    <% if @warehouse.errors.any? %>
+      <div class="flash flash-alert" style="margin-bottom: 20px;">
+        <strong>Hata:</strong>
+        <ul style="margin-left: 20px; margin-top: 6px;">
+          <% @warehouse.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div style="margin-bottom: 16px;">
+      <%= f.label :name, "Ambar Adı", style: "display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);" %>
+      <%= f.text_field :name, placeholder: "Örn: Analytics-Batch-Warehouse", style: "width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" %>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <%= f.label :department_id, "Departman / Maliyet Merkezi", style: "display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);" %>
+      <%= f.collection_select :department_id, @departments, :id, ->(d) { "#{d.cost_center_code} - #{d.name}" }, {}, style: "width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" %>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <div>
+        <%= f.label :size, "Ambar Boyutu (Compute)", style: "display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);" %>
+        <%= f.select :size, Warehouse::SIZES.map { |s| [s.upcase, s] }, {}, style: "width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" %>
+      </div>
+      <div>
+        <%= f.label :credit_quota, "Aylık Kredi Kotası", style: "display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);" %>
+        <%= f.number_field :credit_quota, step: 100, min: 100, style: "width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" %>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <%= f.label :warning_threshold_pct, "Uyarı Eşik Oranı (% - Varsayılan: 80)", style: "display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);" %>
+      <%= f.number_field :warning_threshold_pct, in: 1..99, style: "width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;" %>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 12px;">
+      <%= link_to "İptal", warehouses_path, class: "btn btn-outline" %>
+      <%= f.submit "Ambarı Başlat", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,158 @@
+<div style="margin-bottom: 24px;">
+  <%= link_to "← Gösterge Paneline Dön", root_path, style: "color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem;" %>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h1 style="font-size: 2rem; font-weight: 700;"><%= @warehouse.name %></h1>
+      <span class="badge badge-<%= @warehouse.status %>" style="font-size: 0.85rem;"><%= @warehouse.status %></span>
+    </div>
+    <p style="color: var(--text-secondary); margin-top: 4px;">
+      Departman: <span class="mono" style="color: var(--text-primary);"><%= @warehouse.department&.cost_center_code %> <%= @warehouse.department&.name %></span> | 
+      Boyut: <span class="mono" style="color: var(--text-primary);"><%= @warehouse.size.upcase %></span>
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <%= link_to "🤖 AI Insights", warehouse_ai_insights_path(@warehouse), class: "btn btn-ai" %>
+
+    <% if @warehouse.throttled? %>
+      <%= button_to "⚡ 15 dk SLA Ek Bütçeyi Onayla", approve_sla_warehouse_path(@warehouse), method: :post, class: "btn btn-success" %>
+    <% end %>
+
+    <% if @warehouse.suspended? %>
+      <%= button_to "Ambarı Yeniden Etkinleştir", transition_warehouse_path(@warehouse, status: "active", reason: "Yönetici ambarı yeniden etkinleştirdi"), method: :post, class: "btn btn-primary" %>
+    <% elsif @warehouse.active? || @warehouse.warning? %>
+      <%= button_to "Ambarı Manuel Askıya Al", transition_warehouse_path(@warehouse, status: "suspended", reason: "Güvenlik veya bütçe koruma amaçlı manuel kapatma"), method: :post, class: "btn btn-danger" %>
+    <% end %>
+  </div>
+
+</div>
+
+<% if @warehouse.throttled? %>
+  <div class="card" style="border-color: var(--status-throttled); background: rgba(239, 68, 68, 0.05); margin-bottom: 24px;">
+    <h3 style="color: var(--status-throttled); font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">⚠️ Kredi Kotası Aşıldı — 15 Dakikalık Onay SLA Süresi İşliyor</h3>
+    <p style="font-size: 0.9rem; color: var(--text-primary);">
+      Bu sanal ambar kota limitini (%100) aştı. Üretimdeki veri akışının ve çalışan sorguların ani biçimde çökmesini engellemek için Buzul ambarı anında kapatmadı ve 15 dakikalık bir onay penceresi başlattı.
+    </p>
+    <div style="margin-top: 12px; font-size: 1.1rem;" class="mono">
+      <% rem = @warehouse.sla_seconds_remaining %>
+      Kalan Süre: <strong><%= rem && rem > 0 ? "#{rem / 60} dakika #{rem % 60} saniye" : "Süre doldu (Askıya alınabilir)" %></strong> (Süre dolduğunda FinOps Auto-Governor Engine ambarı otomatik olarak askıya alacaktır).
+    </div>
+  </div>
+<% end %>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Tanımlı Kota</div>
+    <div class="mono" style="font-size: 1.5rem; font-weight: 700; margin-top: 6px;"><%= @warehouse.credit_quota %></div>
+  </div>
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Harcanan Kredi</div>
+    <div class="mono" style="font-size: 1.5rem; font-weight: 700; margin-top: 6px; color: <%= @warehouse.credits_used > @warehouse.credit_quota ? 'var(--status-throttled)' : 'var(--text-primary)' %>;"><%= @warehouse.credits_used %></div>
+  </div>
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Kullanım Oranı</div>
+    <div class="mono" style="font-size: 1.5rem; font-weight: 700; margin-top: 6px;"><%= @warehouse.usage_pct %>%</div>
+  </div>
+  <div class="card" style="margin-bottom: 0;">
+    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Uyarı Eşiği</div>
+    <div class="mono" style="font-size: 1.5rem; font-weight: 700; margin-top: 6px;">%<%= @warehouse.warning_threshold_pct %></div>
+  </div>
+</div>
+
+<!-- Canlı Kredi ve Sorgu Simülasyonu -->
+<div class="card">
+  <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;">⚡ Kredi Harcama ve Sorgu Simülasyonu</h2>
+  <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+    Bu panel üzerinden sentetik analitik sorgular tetikleyerek ambarın kredi tüketimini artırabilir; %80 erken uyarı (`warning`) ve %100 SLA geri sayım (`throttled`) akışını test edebilirsiniz.
+  </p>
+
+  <% if @warehouse.accepts_usage? %>
+    <%= form_with url: warehouse_credit_usage_logs_path(@warehouse), method: :post, local: true do |f| %>
+      <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 250px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Sorgu İmzası (Açıklama)</label>
+          <%= text_field_tag :query_signature, "ETL_PIPELINE_BATCH_RUN_#{Time.current.strftime('%H%M%S')}", class: "mono", style: "width: 100%; padding: 8px 12px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 0.85rem;" %>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+          <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Harcanacak Kredi</label>
+          <%= number_field_tag :credits_spent, 250, step: 10, min: 1, class: "mono", style: "width: 100%; padding: 8px 12px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 0.85rem;" %>
+        </div>
+        <div>
+          <%= submit_tag "Sorguyu Çalıştır (Kredi Harca)", class: "btn btn-primary" %>
+        </div>
+      </div>
+    <% end %>
+
+    <div style="display: flex; gap: 8px; margin-top: 14px; align-items: center;">
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Hızlı Simülasyon:</span>
+      <%= button_to "+100 Kredi (Hafif İş)", warehouse_credit_usage_logs_path(@warehouse, credits_spent: 100, query_signature: "QUICK_ADHOC_QUERY"), method: :post, class: "btn btn-outline", style: "padding: 3px 8px; font-size: 0.75rem;" %>
+      <%= button_to "+400 Kredi (Ağır ETL)", warehouse_credit_usage_logs_path(@warehouse, credits_spent: 400, query_signature: "HEAVY_ETL_AGGREGATION"), method: :post, class: "btn btn-outline", style: "padding: 3px 8px; font-size: 0.75rem;" %>
+      <%= button_to "+1000 Kredi (Kotayı Aş & Throttled)", warehouse_credit_usage_logs_path(@warehouse, credits_spent: 1000, query_signature: "UNOPTIMIZED_DEEP_LEARNING_RUN"), method: :post, class: "btn btn-danger", style: "padding: 3px 8px; font-size: 0.75rem;" %>
+    </div>
+  <% else %>
+    <div style="padding: 12px; background: rgba(107, 114, 128, 0.1); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); font-size: 0.85rem;">
+      Bu ambar askıya alınmış durumda (suspended). Yeni kredi tüketimi gerçekleştirebilmek için ambarı yukarıdaki buton ile yeniden etkinleştirmeniz gerekmektedir.
+    </div>
+  <% end %>
+</div>
+
+<!-- Tüketim Kayıtları (Credit Usage Logs) -->
+<div class="card">
+  <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">Son Sorgu Tüketim Kayıtları (Credit Telemetry)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Çalıştırma Zamanı</th>
+        <th>Sorgu İmzası</th>
+        <th>Harcanan Kredi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @usage_logs.any? %>
+        <% @usage_logs.each do |log| %>
+          <tr>
+            <td class="mono" style="color: var(--text-secondary);"><%= log.executed_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+            <td class="mono" style="font-size: 0.8rem; color: var(--accent-cyan);"><%= log.query_signature %></td>
+            <td class="mono" style="font-weight: 600;"><%= log.credits_spent %> kredi</td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">Henüz bir sorgu tüketim kaydı bulunmuyor.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Denetim İzi (Status Events) -->
+<div class="card">
+  <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">Ambar Denetim İzi (Status Events)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Eski Durum</th>
+        <th>Yeni Durum</th>
+        <th>Açıklama / Neden</th>
+        <th>İşlemi Yapan</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @status_events.any? %>
+        <% @status_events.each do |e| %>
+          <tr>
+            <td class="mono" style="color: var(--text-secondary);"><%= e.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+            <td><span class="badge badge-<%= e.from_status %>"><%= e.from_status %></span></td>
+            <td><span class="badge badge-<%= e.to_status %>"><%= e.to_status %></span></td>
+            <td><%= e.reason %></td>
+            <td><%= e.triggered_by&.full_name || "FinOps Auto-Governor Engine" %></td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Henüz bir durum olayı kaydedilmemiş.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

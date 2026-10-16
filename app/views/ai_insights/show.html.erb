@@ -1,0 +1,335 @@
+<%# AI Insights Dashboard — Buzul FinOps AI Panel %>
+<% content_for(:title) { "AI Insights — #{@warehouse.name} | Buzul" } %>
+
+<div style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+  <%= link_to "← #{@warehouse.name} Detayına Dön", warehouse_path(@warehouse), style: "color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem;" %>
+  <span style="color: var(--border-color);">|</span>
+  <span style="font-size: 0.85rem; color: var(--text-secondary);">AI Destekli FinOps Analizi</span>
+</div>
+
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+      <span style="font-size: 1.8rem;">🤖</span>
+      <h1 style="font-size: 1.75rem; font-weight: 700; background: linear-gradient(135deg, #06B6D4, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Insights Paneli</h1>
+    </div>
+    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+      Ambar: <strong style="color: var(--text-primary);"><%= @warehouse.name %></strong> &nbsp;·&nbsp;
+      <span class="badge badge-<%= @warehouse.status %>"><%= @warehouse.status %></span> &nbsp;·&nbsp;
+      Google Gemini 1.5 Flash destekli analiz
+    </p>
+  </div>
+  <div style="text-align: right;">
+    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">AI Kaynağı</div>
+    <div style="font-size: 0.85rem; font-weight: 600; color: var(--accent-cyan);">
+      <% sources = [@cost_prediction[:source], @query_insights[:source], @advisor_report[:source]].uniq %>
+      <%= sources.include?("gemini") ? "🟢 Gemini 1.5 Flash" : "🟡 Kural Motoru (GEMINI_API_KEY yok)" %>
+    </div>
+  </div>
+</div>
+
+<!-- G2 Pain Point Context Banner -->
+<div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.1)); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+  <div style="font-size: 0.75rem; color: #A78BFA; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">🎯 Bu AI Panelinin Çözdüğü G2 Acı Noktaları</div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px;">
+      <div style="font-size: 0.7rem; color: #F59E0B; margin-bottom: 4px;">📌 Harshil A. — G2, 6/1/2026</div>
+      <div style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">"cost management requires ongoing attention and planning"</div>
+      <div style="font-size: 0.75rem; color: var(--accent-cyan); margin-top: 6px;">→ AI Cost Predictor çözüyor</div>
+    </div>
+    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px;">
+      <div style="font-size: 0.7rem; color: #F59E0B; margin-bottom: 4px;">📌 Pankaj K. — G2, 5/28/2026</div>
+      <div style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">"inefficiencies translate into higher compute costs"</div>
+      <div style="font-size: 0.75rem; color: var(--accent-cyan); margin-top: 6px;">→ AI Query Optimizer çözüyor</div>
+    </div>
+    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px;">
+      <div style="font-size: 0.7rem; color: #F59E0B; margin-bottom: 4px;">📌 Abhay K. — G2, 5/27/2026</div>
+      <div style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">"forced us to upgrade with big cut on the project budget"</div>
+      <div style="font-size: 0.75rem; color: var(--accent-cyan); margin-top: 6px;">→ AI Warehouse Advisor çözüyor</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 1: AI COST PREDICTOR ===== -->
+<div class="card" style="border-color: rgba(6, 182, 212, 0.4); margin-bottom: 24px;">
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+    <span style="font-size: 1.4rem;">💰</span>
+    <div>
+      <h2 style="font-size: 1.1rem; font-weight: 700;">AI Cost Predictor</h2>
+      <p style="font-size: 0.8rem; color: var(--text-secondary);">Sorgu çalıştırmadan önce kredi tüketimini tahmin eder ve riski hesaplar</p>
+    </div>
+    <span class="badge" style="margin-left: auto; background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+      Kaynak: <%= @cost_prediction[:source] == "gemini" ? "Gemini AI" : "Kural Motoru" %>
+    </span>
+  </div>
+
+  <% risk = @cost_prediction[:risk_level].to_s %>
+  <% risk_colors = { "low" => "#10B981", "medium" => "#F59E0B", "high" => "#EF4444", "critical" => "#DC2626" } %>
+  <% risk_color = risk_colors[risk] || "#6B7280" %>
+
+  <!-- Risk Score Display -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Risk Seviyesi</div>
+      <div style="font-size: 1.8rem; font-weight: 800; color: <%= risk_color %>; margin-top: 4px;"><%= risk.upcase %></div>
+    </div>
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Tahmin Edilen Toplam</div>
+      <div class="mono" style="font-size: 1.8rem; font-weight: 800; margin-top: 4px;"><%= @cost_prediction[:predicted_total]&.round || "—" %></div>
+    </div>
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Tahmini Kullanım %</div>
+      <div class="mono" style="font-size: 1.8rem; font-weight: 800; color: <%= risk_color %>; margin-top: 4px;"><%= @cost_prediction[:new_usage_pct] || @warehouse.usage_pct %>%</div>
+    </div>
+    <% if @cost_prediction[:estimated_daily_burn_rate].to_f > 0 %>
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Günlük Tahmini Yanma</div>
+      <div class="mono" style="font-size: 1.8rem; font-weight: 800; margin-top: 4px;"><%= @cost_prediction[:estimated_daily_burn_rate]&.round %></div>
+    </div>
+    <% end %>
+  </div>
+
+  <!-- Recommendation -->
+  <div style="background: rgba(<%= risk_color.delete('#').scan(/../).map { |h| h.to_i(16) }.join(', ') %>, 0.1); border: 1px solid <%= risk_color %>33; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">🤖 AI Önerisi</div>
+    <p style="font-size: 0.9rem; color: var(--text-primary);"><%= @cost_prediction[:recommendation] %></p>
+  </div>
+
+  <% if @cost_prediction[:optimization_tip].present? %>
+  <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 14px;">
+    <div style="font-size: 0.75rem; color: #10B981; margin-bottom: 4px;">💡 Optimizasyon İpucu</div>
+    <p style="font-size: 0.85rem; color: var(--text-secondary);"><%= @cost_prediction[:optimization_tip] %></p>
+  </div>
+  <% end %>
+
+  <!-- Live Predict Form -->
+  <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+    <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary);">Yeni Sorgu Tahmin Et</div>
+    <%= form_with url: predict_warehouse_ai_insights_path(@warehouse), method: :get, local: true do |f| %>
+      <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 200px;">
+          <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Sorgu İmzası</label>
+          <%= text_field_tag :query_signature, params[:query_signature] || "ETL_BATCH_DAILY", class: "mono", style: "width: 100%; padding: 8px 12px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 0.82rem;" %>
+        </div>
+        <div style="flex: 1; min-width: 130px;">
+          <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Kredi Miktarı</label>
+          <%= number_field_tag :credits_requested, params[:credits_requested] || 200, min: 1, step: 50, style: "width: 100%; padding: 8px 12px; background: var(--bg-hover); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 0.82rem;" %>
+        </div>
+        <%= submit_tag "Tahmin Et →", class: "btn btn-primary", style: "white-space: nowrap;" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- ===== SECTION 2: AI QUERY OPTIMIZER ===== -->
+<div class="card" style="border-color: rgba(245, 158, 11, 0.4); margin-bottom: 24px;">
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+    <span style="font-size: 1.4rem;">🔍</span>
+    <div>
+      <h2 style="font-size: 1.1rem; font-weight: 700;">AI Query Optimizer</h2>
+      <p style="font-size: 0.8rem; color: var(--text-secondary);">Sorgu kalıplarını analiz eder, israfı tespit eder ve optimizasyon önerir</p>
+    </div>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+      <% score = @query_insights[:optimization_score].to_i %>
+      <% score_color = score >= 80 ? "#10B981" : (score >= 50 ? "#F59E0B" : "#EF4444") %>
+      <div style="text-align: center;">
+        <div style="font-size: 0.7rem; color: var(--text-secondary);">Optimizasyon Skoru</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: <%= score_color %>;"><%= score %>/100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive Summary -->
+  <% if @query_insights[:executive_summary].present? %>
+  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+    <div style="font-size: 0.75rem; color: #F59E0B; margin-bottom: 4px;">📊 Yönetici Özeti</div>
+    <p style="font-size: 0.875rem;"><%= @query_insights[:executive_summary] %></p>
+  </div>
+  <% end %>
+
+  <!-- Detected Issues -->
+  <% if @query_insights[:issues].any? %>
+  <div style="margin-bottom: 16px;">
+    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">
+      ⚠️ Tespit Edilen Anti-Pattern'lar (<%= @query_insights[:detected_issue_count] %> adet)
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+      <% @query_insights[:issues].each do |issue| %>
+        <% sev = issue.is_a?(Hash) ? issue["severity"] || issue[:severity] : "medium" %>
+        <% sev_colors = { "high" => "#EF4444", "medium" => "#F59E0B", "low" => "#10B981" } %>
+        <% sev_color = sev_colors[sev.to_s] || "#6B7280" %>
+        <div style="background: var(--bg-hover); border: 1px solid <%= sev_color %>44; border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: <%= sev_color %>; text-transform: uppercase;">
+              <%= issue.is_a?(Hash) ? (issue["type"] || issue[:type]).to_s.humanize : issue.to_s %>
+            </span>
+            <span style="font-size: 0.65rem; color: var(--text-secondary);">Şiddet: <%= sev.upcase %></span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">
+            <%= issue.is_a?(Hash) ? (issue["description"] || issue[:description]) : "" %>
+          </p>
+          <% total = issue.is_a?(Hash) ? (issue["total_credits"] || issue[:total_credits]).to_i : 0 %>
+          <% if total > 0 %>
+          <div class="mono" style="font-size: 0.75rem; color: #EF4444; margin-top: 6px;">− <%= total %> kredi israf</div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <% else %>
+  <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+    <p style="font-size: 0.875rem; color: #10B981;">✅ Mevcut sorgu geçmişinde kritik anti-pattern tespit edilmedi.</p>
+  </div>
+  <% end %>
+
+  <!-- Recommendations -->
+  <% if @query_insights[:recommendations].any? %>
+  <div>
+    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">💡 Optimizasyon Önerileri</div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <% @query_insights[:recommendations].each_with_index do |rec, i| %>
+        <div style="background: var(--bg-hover); border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+          <div style="flex: 1;">
+            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">
+              <%= i + 1 %>. <%= rec.is_a?(Hash) ? (rec["title"] || rec[:title]) : rec.to_s %>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">
+              <%= rec.is_a?(Hash) ? (rec["action"] || rec[:action]) : "" %>
+            </div>
+          </div>
+          <% savings = rec.is_a?(Hash) ? (rec["credit_savings"] || rec[:credit_savings]).to_i : 0 %>
+          <% if savings > 0 %>
+          <div style="text-align: center; min-width: 80px;">
+            <div style="font-size: 0.65rem; color: #10B981;">Tasarruf</div>
+            <div class="mono" style="font-size: 1rem; font-weight: 700; color: #10B981;">+<%= savings %></div>
+            <div style="font-size: 0.65rem; color: var(--text-secondary);">kredi</div>
+          </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+
+  <!-- Wasted Credits Summary -->
+  <% if @query_insights[:wasted_credits].to_i > 0 %>
+  <div style="margin-top: 16px; padding: 12px 16px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-size: 0.85rem; color: var(--text-secondary);">Tahmini İsraf Edilen Kredi</span>
+    <div style="display: flex; gap: 20px; align-items: center;">
+      <span class="mono" style="font-size: 1.1rem; font-weight: 700; color: #EF4444;"><%= @query_insights[:wasted_credits] %> kredi</span>
+      <span style="font-size: 0.85rem; color: #F59E0B;">%<%= @query_insights[:savings_pct] %> tasarruf potansiyeli</span>
+    </div>
+  </div>
+  <% end %>
+</div>
+
+<!-- ===== SECTION 3: AI WAREHOUSE ADVISOR ===== -->
+<div class="card" style="border-color: <%= @advisor_report[:upgrade_urgency].to_s == 'immediate' ? 'var(--status-throttled)' : (@advisor_report[:upgrade_urgency].to_s == 'high' ? 'rgba(245, 158, 11, 0.5)' : 'rgba(139, 92, 246, 0.4)') %>; margin-bottom: 24px;">
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+    <span style="font-size: 1.4rem;">📊</span>
+    <div>
+      <h2 style="font-size: 1.1rem; font-weight: 700;">AI Warehouse Advisor</h2>
+      <p style="font-size: 0.8rem; color: var(--text-secondary);">Boyutlandırma önerir ve bütçe krizini proaktif olarak önler</p>
+    </div>
+    <% urgency = @advisor_report[:upgrade_urgency].to_s %>
+    <% urgency_colors = { "immediate" => "#DC2626", "high" => "#EF4444", "medium" => "#F59E0B", "low" => "#10B981", "none" => "#6B7280" } %>
+    <div style="margin-left: auto; text-align: right;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary);">Aciliyet</div>
+      <div style="font-size: 1rem; font-weight: 700; color: <%= urgency_colors[urgency] || '#6B7280' %>;"><%= urgency.upcase %></div>
+    </div>
+  </div>
+
+  <!-- Size Adequacy -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Mevcut Boyut</div>
+      <div class="mono" style="font-size: 1.4rem; font-weight: 800; margin-top: 4px;"><%= @warehouse.size.upcase %></div>
+    </div>
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <% rec_size = @advisor_report[:recommended_size].to_s %>
+      <% adequate = @advisor_report[:current_size_adequate] %>
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Önerilen Boyut</div>
+      <div class="mono" style="font-size: 1.4rem; font-weight: 800; margin-top: 4px; color: <%= adequate ? '#10B981' : '#F59E0B' %>;"><%= rec_size.upcase %></div>
+    </div>
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Kriz Gün Tahmini</div>
+      <% days = @advisor_report[:days_until_budget_crisis].to_i %>
+      <div class="mono" style="font-size: 1.4rem; font-weight: 800; margin-top: 4px; color: <%= days < 7 ? '#EF4444' : (days < 30 ? '#F59E0B' : '#10B981') %>;"><%= days >= 9999 ? "∞" : days %></div>
+    </div>
+    <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; text-align: center;">
+      <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Aylık Tahmini Maliyet</div>
+      <div class="mono" style="font-size: 1.4rem; font-weight: 800; margin-top: 4px;"><%= @advisor_report[:projected_monthly_cost] %></div>
+    </div>
+  </div>
+
+  <!-- Advice Box -->
+  <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 8px; padding: 16px; margin-bottom: 14px;">
+    <div style="font-size: 0.75rem; color: #A78BFA; margin-bottom: 6px;">🤖 AI Tavsiyesi</div>
+    <p style="font-size: 0.9rem;"><%= @advisor_report[:advice] %></p>
+  </div>
+
+  <!-- Key Risk & Proactive Action -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+    <% if @advisor_report[:key_risk].present? %>
+    <div style="background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 14px;">
+      <div style="font-size: 0.75rem; color: #F87171; margin-bottom: 6px;">⚠️ Temel Risk</div>
+      <p style="font-size: 0.82rem; color: var(--text-secondary);"><%= @advisor_report[:key_risk] %></p>
+    </div>
+    <% end %>
+    <% if @advisor_report[:proactive_action].present? %>
+    <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 14px;">
+      <div style="font-size: 0.75rem; color: #34D399; margin-bottom: 6px;">✅ Proaktif Aksiyon</div>
+      <p style="font-size: 0.82rem; color: var(--text-secondary);"><%= @advisor_report[:proactive_action] %></p>
+    </div>
+    <% end %>
+  </div>
+
+  <!-- Usage Metrics -->
+  <% metrics = @advisor_report[:metrics] %>
+  <% if metrics %>
+  <details style="margin-top: 8px;">
+    <summary style="cursor: pointer; font-size: 0.8rem; color: var(--text-secondary); padding: 8px 0;">📈 Detaylı Kullanım Metrikleri</summary>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 12px;">
+      <div style="background: var(--bg-hover); border-radius: 6px; padding: 10px;">
+        <div style="font-size: 0.7rem; color: var(--text-secondary);">Günlük Ortalama Yanma</div>
+        <div class="mono" style="font-weight: 600; margin-top: 2px;"><%= metrics.is_a?(Hash) ? (metrics["avg_credits_per_day"] || metrics[:avg_credits_per_day]) : "—" %> kredi/gün</div>
+      </div>
+      <div style="background: var(--bg-hover); border-radius: 6px; padding: 10px;">
+        <div style="font-size: 0.7rem; color: var(--text-secondary);">Tüketim Trendi</div>
+        <div class="mono" style="font-weight: 600; margin-top: 2px;">
+          <% trend = metrics.is_a?(Hash) ? (metrics["usage_trend"] || metrics[:usage_trend]).to_s : "stable" %>
+          <%= trend == "accelerating" ? "🔺 Hızlanıyor" : (trend == "decelerating" ? "🔻 Yavaşlıyor" : "➡️ Stabil") %>
+        </div>
+      </div>
+      <div style="background: var(--bg-hover); border-radius: 6px; padding: 10px;">
+        <div style="font-size: 0.7rem; color: var(--text-secondary);">Önerilen Kota</div>
+        <div class="mono" style="font-weight: 600; margin-top: 2px;"><%= metrics.is_a?(Hash) ? (metrics["recommended_quota"] || metrics[:recommended_quota]) : "—" %></div>
+      </div>
+      <div style="background: var(--bg-hover); border-radius: 6px; padding: 10px;">
+        <div style="font-size: 0.7rem; color: var(--text-secondary);">Geçmiş Throttle/Suspend</div>
+        <div class="mono" style="font-weight: 600; margin-top: 2px;">
+          <%= metrics.is_a?(Hash) ? (metrics["throttled_events"] || metrics[:throttled_events]).to_i : 0 %>T /
+          <%= metrics.is_a?(Hash) ? (metrics["suspension_events"] || metrics[:suspension_events]).to_i : 0 %>S olay
+        </div>
+      </div>
+    </div>
+  </details>
+  <% end %>
+</div>
+
+<!-- API Key Setup Notice -->
+<% unless ENV["GEMINI_API_KEY"].present? %>
+<div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 16px; display: flex; gap: 12px; align-items: flex-start;">
+  <span style="font-size: 1.2rem;">🔑</span>
+  <div>
+    <div style="font-size: 0.85rem; font-weight: 600; color: #F59E0B; margin-bottom: 4px;">Gemini AI Aktif Değil — Kural Motoru Çalışıyor</div>
+    <p style="font-size: 0.8rem; color: var(--text-secondary);">
+      Gerçek Gemini 1.5 Flash analizini etkinleştirmek için:
+      <code style="background: var(--bg-hover); padding: 2px 6px; border-radius: 4px; font-family: monospace;">GEMINI_API_KEY=AIza... bin/rails server</code>
+      komutuyla başlatın. API anahtarını
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-cyan);">Google AI Studio</a>'dan ücretsiz alabilirsiniz.
+    </p>
+  </div>
+</div>
+<% end %>

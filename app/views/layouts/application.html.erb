@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <title><%= content_for(:title) || "Buzul | Bulut Veri Ambarı Kredi ve Kota Yönetimi" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --bg-main: #0B0F19;
+        --bg-card: #111827;
+        --bg-hover: #1F2937;
+        --border-color: #374151;
+        --text-primary: #F9FAFB;
+        --text-secondary: #9CA3AF;
+        --accent-cyan: #06B6D4;
+        --accent-blue: #3B82F6;
+        --status-active: #10B981;
+        --status-warning: #F59E0B;
+        --status-throttled: #EF4444;
+        --status-suspended: #6B7280;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        line-height: 1.5;
+        padding-bottom: 60px;
+      }
+
+      .navbar {
+        background-color: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .brand-badge {
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #fff;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+      }
+      .nav-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.15s;
+      }
+      .nav-links a:hover { color: var(--text-primary); }
+      .nav-links a.ai-nav {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.15));
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: #A78BFA;
+      }
+      .nav-links a.ai-nav:hover { color: #C4B5FD; background: rgba(139, 92, 246, 0.25); }
+
+      .container {
+        max-width: 1280px;
+        margin: 32px auto;
+        padding: 0 24px;
+      }
+
+      .flash {
+        padding: 14px 20px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+      }
+      .flash-notice { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--status-active); color: #6EE7B7; }
+      .flash-alert { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--status-throttled); color: #FCA5A5; }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .badge-active { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+      .badge-warning { background: rgba(245, 158, 11, 0.2); color: #FBBF24; }
+      .badge-throttled { background: rgba(239, 68, 68, 0.2); color: #F87171; animation: pulse 2s infinite; }
+      .badge-suspended { background: rgba(107, 114, 128, 0.2); color: #9CA3AF; }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        border: none;
+        transition: all 0.15s;
+      }
+      .btn-primary { background: var(--accent-blue); color: #fff; }
+      .btn-primary:hover { background: #2563EB; }
+      .btn-success { background: var(--status-active); color: #fff; }
+      .btn-success:hover { background: #059669; }
+      .btn-danger { background: var(--status-throttled); color: #fff; }
+      .btn-danger:hover { background: #DC2626; }
+      .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+      .btn-outline:hover { background: var(--bg-hover); }
+      .btn-ai { background: linear-gradient(135deg, #7C3AED, #0891B2); color: #fff; }
+      .btn-ai:hover { background: linear-gradient(135deg, #6D28D9, #0E7490); }
+
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        text-align: left;
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
+      }
+      td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.875rem;
+      }
+      tr:last-child td { border-bottom: none; }
+      tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+      .mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+  </head>
+
+  <body>
+    <header class="navbar">
+      <a href="/" class="brand">
+        <span style="font-size: 1.5rem;">❄️</span>
+        <span>Buzul</span>
+        <span class="brand-badge">FinOps</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/">Gösterge Paneli</a>
+        <a href="/warehouses">Sanal Ambarlar</a>
+        <a href="/departments">Departmanlar</a>
+        <a href="/cost_alerts">Maliyet Alarmları</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="badge" style="background: rgba(255, 255, 255, 0.08); padding: 6px 12px; font-size: 0.8rem; text-transform: none;">
+          👤 <strong>Zeynep Yardımcı</strong> (Admin)
+        </span>
+      </div>
+    </header>
+
+    <main class="container">
+      <% if notice %>
+        <div class="flash flash-notice"><%= notice %></div>
+      <% end %>
+      <% if alert %>
+        <div class="flash flash-alert"><%= alert %></div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+  </body>
+</html>

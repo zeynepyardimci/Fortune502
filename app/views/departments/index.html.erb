@@ -1,0 +1,38 @@
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 1.75rem; font-weight: 700;">Departmanlar & Maliyet Merkezleri</h1>
+  <p style="color: var(--text-secondary); font-size: 0.9rem;">Showback / Chargeback kodları ve departman bütçe kotaları.</p>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Maliyet Merkezi</th>
+        <th>Departman Adı</th>
+        <th>Sorumlu Yönetici</th>
+        <th>Bağlı Ambar Sayısı</th>
+        <th>Toplam Kullanılan / Kota</th>
+        <th>Kullanım %</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @departments.each do |dept| %>
+        <tr>
+          <td class="mono" style="font-weight: 600; color: var(--accent-cyan);"><%= dept.cost_center_code %></td>
+          <td style="font-weight: 600;"><%= link_to dept.name, department_path(dept), style: "color: var(--text-primary); text-decoration: none;" %></td>
+          <td><%= dept.owner&.full_name || "Atanmamış" %></td>
+          <td class="mono"><%= dept.warehouses.count %></td>
+          <td class="mono"><%= dept.total_credits_used %> / <%= dept.total_quota %></td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex: 1; background: var(--bg-hover); height: 6px; border-radius: 3px; overflow: hidden; width: 80px;">
+                <div style="width: <%= [dept.usage_percentage, 100].min %>%; height: 100%; background: <%= dept.usage_percentage >= 100 ? 'var(--status-throttled)' : (dept.usage_percentage >= 80 ? 'var(--status-warning)' : 'var(--status-active)') %>;"></div>
+              </div>
+              <span class="mono" style="font-size: 0.75rem;"><%= dept.usage_percentage %>%</span>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

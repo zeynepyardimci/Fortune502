@@ -1,0 +1,46 @@
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 1.75rem; font-weight: 700;">FinOps Maliyet ve Bütçe Alarmları</h1>
+  <p style="color: var(--text-secondary); font-size: 0.9rem;">Eşik aşımı (%80 erken uyarı ve %100 kota ihlali) bildirimleri.</p>
+</div>
+
+<div class="card">
+  <h2 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 16px;">Aktif (Bekleyen) Alarmlar</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Ambar</th>
+        <th>Alarm Türü</th>
+        <th>Mevcut Tüketim / Kota</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @unacknowledged_alerts.any? %>
+        <% @unacknowledged_alerts.each do |alert| %>
+          <tr>
+            <td class="mono" style="color: var(--text-secondary);"><%= alert.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+            <td style="font-weight: 600;">
+              <%= link_to alert.warehouse.name, warehouse_path(alert.warehouse), style: "color: var(--text-primary); text-decoration: none;" %>
+            </td>
+            <td>
+              <% if alert.alert_type == "breach_100" %>
+                <span class="badge badge-throttled">KOTA İHLALİ (%100)</span>
+              <% else %>
+                <span class="badge badge-warning">ERKEN UYARI (%80)</span>
+              <% end %>
+            </td>
+            <td class="mono"><%= alert.warehouse.credits_used %> / <%= alert.warehouse.credit_quota %></td>
+            <td>
+              <%= button_to "Onayla & Arşivle", cost_alert_path(alert), method: :patch, class: "btn btn-outline", style: "padding: 4px 10px; font-size: 0.75rem;" %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 24px;">Aktif bekleyen bir maliyet alarmı bulunmuyor.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

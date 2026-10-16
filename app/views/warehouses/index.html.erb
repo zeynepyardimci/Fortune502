@@ -1,0 +1,50 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700;">Sanal Veri Ambarları</h1>
+    <p style="color: var(--text-secondary); font-size: 0.9rem;">Tüm ambarlar, boyutlar, kredi kotaları ve durum yönetimi.</p>
+  </div>
+  <div>
+    <%= link_to "+ Yeni Ambar Ekle", new_warehouse_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Ambar Adı</th>
+        <th>Departman</th>
+        <th>Boyut</th>
+        <th>Durum</th>
+        <th>Kullanılan / Kota</th>
+        <th>Kullanım %</th>
+        <th>SLA Penceresi</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @warehouses.each do |wh| %>
+        <tr>
+          <td style="font-weight: 600;">
+            <%= link_to wh.name, warehouse_path(wh), style: "color: var(--text-primary); text-decoration: none;" %>
+          </td>
+          <td><span class="mono" style="color: var(--text-secondary);"><%= wh.department&.cost_center_code %></span> <%= wh.department&.name %></td>
+          <td><span class="badge" style="background: rgba(255,255,255,0.05);"><%= wh.size.upcase %></span></td>
+          <td><span class="badge badge-<%= wh.status %>"><%= wh.status %></span></td>
+          <td class="mono"><%= wh.credits_used %> / <%= wh.credit_quota %></td>
+          <td class="mono"><%= wh.usage_pct %>%</td>
+          <td>
+            <% if wh.throttled? %>
+              <span style="color: var(--status-throttled); font-weight: 600;">15 dk SLA Aktif</span>
+            <% else %>
+              <span style="color: var(--text-secondary);">-</span>
+            <% end %>
+          </td>
+          <td>
+            <%= link_to "Görüntüle", warehouse_path(wh), class: "btn btn-outline", style: "padding: 4px 10px; font-size: 0.75rem;" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
