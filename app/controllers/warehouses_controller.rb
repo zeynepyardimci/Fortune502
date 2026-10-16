@@ -40,6 +40,11 @@ class WarehousesController < ApplicationController
     end
   end
 
+  def destroy
+    @warehouse.destroy
+    redirect_to warehouses_path, notice: "Ambar başarıyla silindi."
+  end
+
   def transition
     target_status = params[:status]
     reason = params[:reason] || "Manuel kullanıcı aksiyonu"
