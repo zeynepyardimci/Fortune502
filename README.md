@@ -448,7 +448,7 @@ Projenin sürekli entegrasyon (CI) hattı `.github/workflows/ci.yml` dosyasında
 - **Platform:** Render PaaS (`render.yaml` ve `Dockerfile` ile)
 - **Altyapı:** Ruby 3.4.7 Slim konteyneri, Jemalloc bellek optimizasyonu, SQLite/PostgreSQL uyumlu persistent volume.
 - **Canlı Dağıtım Durumu:** **Tamamlandı / Uygulandı**
-- **Canlı URL:** [https://buzul.onrender.com](https://buzul.onrender.com) *(veya Render dashboard canlı adresi)*
+- **Canlı URL:** [[https://buzul.onrender.com](https://buzul-finops.onrender.com/)](https://buzul.onrender.com) *(veya Render dashboard canlı adresi)*
 - **Sağlık Denetimi (Health Check):** `/up` endpoint'i üzerinden HTTP 200 yanıtı ile doğrulanmıştır.
 
 ---
